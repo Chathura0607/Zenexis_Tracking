@@ -1,7 +1,19 @@
-import { Tabs } from 'expo-router';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { useAuth } from '@/contexts/AuthContext';
+import { Redirect, Tabs } from 'expo-router';
 import { Package, Plus, History, User } from 'lucide-react-native';
 
 export default function TabLayout() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!user) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
   return (
     <Tabs
       screenOptions={{

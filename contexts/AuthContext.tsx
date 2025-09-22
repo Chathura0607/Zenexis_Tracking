@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
+import { router } from 'expo-router';
 
 interface AuthContextType {
   user: User | null;
@@ -42,7 +43,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    await signOut(auth);
+    setLoading(true);
+
+    try {
+      await signOut(auth);
+      setUser(null);
+      router.replace('/(auth)/login');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const value = {

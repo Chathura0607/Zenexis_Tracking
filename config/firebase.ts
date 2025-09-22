@@ -1,22 +1,33 @@
 // src/config/firebase.ts
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, type Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBdeqmDxbGFq1fDgyUhRc5Xim4ZNF0j-oA",
   authDomain: "zenexistrackingbackend.firebaseapp.com",
   projectId: "zenexistrackingbackend",
-  storageBucket: "zenexistrackingbackend.appspot.com",
+  storageBucket: "zenexistrackingbackend.firebasestorage.app",
   messagingSenderId: "20316221532",
   appId: "1:20316221532:web:85c96a5a6bb8a16368b699",
-  measurementId: "G-5B4WEJR47N"
+  // measurementId: "G-5B4WEJR47N"
 };
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+let firestoreInstance: Firestore;
+
+try {
+  firestoreInstance = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true,
+  });
+} catch (error) {
+  firestoreInstance = getFirestore(app);
+}
+
+export const db = firestoreInstance;
 
 // Add connection settings to help with WebSocket issues
 if (typeof window !== 'undefined') {
