@@ -2,7 +2,6 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import '../global.css';
 
 export default function RootLayout() {
   useFrameworkReady();

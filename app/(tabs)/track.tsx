@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, MapPin, Clock, CircleCheck as CheckCircle, Circle as XCircle, Truck, Package } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { getUserParcels } from '@/services/parcelService';
 import { Parcel } from '@/types/parcel';
+import { CircleCheck as CheckCircle, Clock, MapPin, Package, Search, Truck, Circle as XCircle } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const StatusIcon = ({ status }: { status: string }) => {
   const iconProps = { size: 20 };
@@ -70,77 +70,77 @@ export default function Track() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="px-6 py-4 bg-white">
-        <Text className="text-2xl font-bold text-gray-900 mb-6">Track Parcels</Text>
-        
-        <View className="relative">
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Track Parcels</Text>
+        <View style={styles.searchWrapper}>
           <TextInput
-            className="bg-gray-50 border border-gray-200 rounded-lg pl-12 pr-4 py-3 text-gray-900"
+            style={styles.searchInput}
             placeholder="Search by tracking number or title..."
             value={searchQuery}
             onChangeText={setSearchQuery}
+            placeholderTextColor="#6b7280"
           />
-          <Search className="absolute left-4 top-3" size={20} color="#6b7280" />
+          <View style={styles.searchIcon}>
+            <Search size={20} color="#6b7280" />
+          </View>
         </View>
       </View>
 
-      <ScrollView className="flex-1 px-6 py-4">
+      <ScrollView contentContainerStyle={styles.listContainer}>
         {loading ? (
-          <View className="flex-1 justify-center items-center">
-            <Text className="text-gray-600">Loading parcels...</Text>
+          <View style={styles.centered}>
+            <Text style={styles.mutedText}>Loading parcels...</Text>
           </View>
         ) : filteredParcels.length === 0 ? (
-          <View className="flex-1 justify-center items-center py-20">
+          <View style={styles.emptyState}>
             <Package size={48} color="#9ca3af" />
-            <Text className="text-gray-600 mt-4 text-center">
+            <Text style={[styles.mutedText, styles.mt4, styles.textCenter]}>
               {searchQuery ? 'No parcels match your search' : 'No parcels found'}
             </Text>
             {!searchQuery && (
-              <Text className="text-gray-500 mt-2 text-center">
+              <Text style={[styles.subtleText, styles.mt2, styles.textCenter]}>
                 Add your first parcel to start tracking
               </Text>
             )}
           </View>
         ) : (
-          <View className="space-y-4">
+          <View style={styles.cardsStack}>
             {filteredParcels.map((parcel) => (
-              <View key={parcel.id} className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <View className="flex-row justify-between items-start mb-3">
-                  <View className="flex-1">
-                    <Text className="font-semibold text-gray-900 text-lg">{parcel.title}</Text>
-                    <Text className="text-gray-600 text-sm mt-1">{parcel.trackingNumber}</Text>
+              <View key={parcel.id} style={styles.card}>
+                <View style={styles.cardHeaderRow}>
+                  <View style={styles.flex1}>
+                    <Text style={styles.cardTitle}>{parcel.title}</Text>
+                    <Text style={styles.cardSubtitle}>{parcel.trackingNumber}</Text>
                   </View>
-                  <View className={`px-3 py-1 rounded-full flex-row items-center ${getStatusColor(parcel.status)}`}>
+                  <View style={[styles.statusPill, getStatusPillStyle(parcel.status)]}>
                     <StatusIcon status={parcel.status} />
-                    <Text className="ml-2 text-sm font-medium capitalize">{parcel.status}</Text>
+                    <Text style={styles.statusText}>{parcel.status}</Text>
                   </View>
                 </View>
 
-                <View className="space-y-2">
-                  <View className="flex-row items-center">
+                <View style={styles.cardBody}>
+                  <View style={styles.inlineRow}>
                     <MapPin size={16} color="#6b7280" />
-                    <Text className="ml-2 text-gray-600 text-sm flex-1">{parcel.recipientAddress}</Text>
+                    <Text style={styles.inlineText}>{parcel.recipientAddress}</Text>
                   </View>
-                  
-                  <View className="flex-row items-center">
+
+                  <View style={styles.inlineRow}>
                     <Clock size={16} color="#6b7280" />
-                    <Text className="ml-2 text-gray-600 text-sm">Created: {formatDate(parcel.createdAt)}</Text>
+                    <Text style={styles.inlineText}>Created: {formatDate(parcel.createdAt)}</Text>
                   </View>
                 </View>
 
                 {parcel.statusHistory && parcel.statusHistory.length > 0 && (
-                  <View className="mt-3 pt-3 border-t border-gray-100">
-                    <Text className="text-sm font-medium text-gray-900 mb-2">Latest Update:</Text>
-                    <View className="flex-row items-center">
+                  <View style={styles.cardFooter}>
+                    <Text style={styles.footerHeading}>Latest Update:</Text>
+                    <View style={styles.inlineRow}>
                       <StatusIcon status={parcel.statusHistory[0].status} />
-                      <View className="ml-2 flex-1">
-                        <Text className="text-sm text-gray-900 capitalize">{parcel.statusHistory[0].status}</Text>
-                        <Text className="text-xs text-gray-500">{parcel.statusHistory[0].location}</Text>
+                      <View style={styles.flex1}>
+                        <Text style={styles.inlineTitle}>{parcel.statusHistory[0].status}</Text>
+                        <Text style={styles.inlineSubtle}>{parcel.statusHistory[0].location}</Text>
                       </View>
-                      <Text className="text-xs text-gray-500">
-                        {formatDate(parcel.statusHistory[0].timestamp)}
-                      </Text>
+                      <Text style={styles.inlineSubtle}>{formatDate(parcel.statusHistory[0].timestamp)}</Text>
                     </View>
                   </View>
                 )}
@@ -151,4 +151,70 @@ export default function Track() {
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f9fafb' },
+  header: { paddingHorizontal: 24, paddingVertical: 16, backgroundColor: '#ffffff' },
+  headerTitle: { fontSize: 24, fontWeight: '700', color: '#111827', marginBottom: 24 },
+  searchWrapper: { position: 'relative' },
+  searchInput: {
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+    paddingLeft: 48,
+    paddingRight: 16,
+    paddingVertical: 12,
+    color: '#111827',
+  },
+  searchIcon: { position: 'absolute', left: 16, top: 10 },
+  listContainer: { paddingHorizontal: 24, paddingVertical: 16, flexGrow: 1 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  mutedText: { color: '#4b5563' },
+  subtleText: { color: '#6b7280' },
+  textCenter: { textAlign: 'center' },
+  mt2: { marginTop: 8 },
+  mt4: { marginTop: 16 },
+  emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 80 },
+  cardsStack: { gap: 16 },
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    borderWidth: 1,
+    borderColor: '#f3f4f6',
+  },
+  cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
+  flex1: { flex: 1 },
+  cardTitle: { fontWeight: '600', color: '#111827', fontSize: 18 },
+  cardSubtitle: { color: '#4b5563', fontSize: 12, marginTop: 4 },
+  statusPill: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, flexDirection: 'row', alignItems: 'center' },
+  statusText: { marginLeft: 8, fontSize: 14, fontWeight: '500', textTransform: 'capitalize' },
+  cardBody: { gap: 8 },
+  inlineRow: { flexDirection: 'row', alignItems: 'center' },
+  inlineText: { marginLeft: 8, color: '#4b5563', fontSize: 12, flex: 1 },
+  cardFooter: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
+  footerHeading: { fontSize: 12, fontWeight: '600', color: '#111827', marginBottom: 8 },
+  inlineTitle: { fontSize: 14, color: '#111827', textTransform: 'capitalize' },
+  inlineSubtle: { fontSize: 12, color: '#6b7280' },
+});
+
+function getStatusPillStyle(status: string) {
+  switch (status) {
+    case 'pending':
+      return { backgroundColor: '#fffbeb' };
+    case 'in-transit':
+      return { backgroundColor: '#eff6ff' };
+    case 'delivered':
+      return { backgroundColor: '#ecfdf5' };
+    case 'cancelled':
+      return { backgroundColor: '#fef2f2' };
+    default:
+      return { backgroundColor: '#f9fafb' };
+  }
 }

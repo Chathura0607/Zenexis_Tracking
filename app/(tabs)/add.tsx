@@ -4,7 +4,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { router } from 'expo-router';
 import { Camera, X } from 'lucide-react-native';
 import React, { useRef, useState } from 'react';
-import { Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function AddParcel() {
@@ -116,26 +116,26 @@ export default function AddParcel() {
 
   if (showCamera) {
     return (
-      <View className="flex-1 bg-black">
+      <View style={{ flex: 1, backgroundColor: 'black' }}>
         <CameraView 
-          className="flex-1"
+          style={{ flex: 1 }}
           ref={cameraRef}
         >
-          <View className="flex-1 justify-end items-center pb-20">
-            <View className="flex-row space-x-20">
+          <View style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 80 }}>
+            <View style={{ flexDirection: 'row', columnGap: 80 }}>
               <TouchableOpacity
-                className="bg-gray-600/80 backdrop-blur-sm rounded-full p-4 shadow-strong"
+                style={{ backgroundColor: 'rgba(75,85,99,0.8)', borderRadius: 999, padding: 16 }}
                 onPress={() => setShowCamera(false)}
               >
                 <X size={24} color="white" />
               </TouchableOpacity>
               <TouchableOpacity
-                className="bg-white rounded-full p-6 shadow-strong active:scale-95 transition-transform duration-150"
+                style={{ backgroundColor: 'white', borderRadius: 999, padding: 24 }}
                 onPress={capturePhoto}
               >
                 <Camera size={32} color="black" />
               </TouchableOpacity>
-              <View className="w-16" />
+              <View style={{ width: 64 }} />
             </View>
           </View>
         </CameraView>
@@ -144,160 +144,81 @@ export default function AddParcel() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="px-6 py-6 bg-white shadow-soft border-b border-gray-100">
-        <Text className="heading-2 text-gray-900">Add New Parcel</Text>
-        <Text className="text-caption mt-1">Create a new tracking entry for your package</Text>
+    <SafeAreaView style={s.container}>
+      <View style={s.header}>
+        <Text style={s.headerTitle}>Add New Parcel</Text>
+        <Text style={s.headerSubtitle}>Create a new tracking entry for your package</Text>
       </View>
 
-      <ScrollView className="flex-1 px-6 py-6" showsVerticalScrollIndicator={false}>
-        <View className="card p-6 space-y-modern">
-          <View className="space-y-6">
-            <View className="form-group">
-              <Text className="form-label-required">Title</Text>
-              <TextInput
-                className="input"
-                placeholder="e.g., iPhone 15 Pro"
-                value={title}
-                onChangeText={setTitle}
-              />
-            </View>
-
-            <View className="form-group">
-              <Text className="form-label">Description</Text>
-              <TextInput
-                className="input"
-                placeholder="Package description..."
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                numberOfLines={3}
-                textAlignVertical="top"
-              />
-              <Text className="form-help">Optional: Add details about the package contents</Text>
-            </View>
-
-            <View className="form-group">
-              <Text className="form-label-required">Sender</Text>
-              <TextInput
-                className="input"
-                placeholder="Sender name"
-                value={sender}
-                onChangeText={setSender}
-              />
-            </View>
-
-            <View className="form-group">
-              <Text className="form-label-required">Recipient</Text>
-              <TextInput
-                className="input"
-                placeholder="Recipient name"
-                value={recipient}
-                onChangeText={setRecipient}
-              />
-            </View>
-
-            <View className="form-group">
-              <Text className="form-label-required">Delivery Address</Text>
-              <TextInput
-                className="input"
-                placeholder="Full delivery address"
-                value={recipientAddress}
-                onChangeText={setRecipientAddress}
-                multiline
-                numberOfLines={2}
-                textAlignVertical="top"
-              />
-            </View>
-
-            <View className="flex-row space-x-4">
-              <View className="flex-1 form-group">
-                <Text className="form-label">Weight (kg)</Text>
-                <TextInput
-                  className="input"
-                  placeholder="0.5"
-                  value={weight}
-                  onChangeText={setWeight}
-                  keyboardType="numeric"
-                />
-              </View>
-              <View className="flex-1 form-group">
-                <Text className="form-label">Dimensions</Text>
-                <TextInput
-                  className="input"
-                  placeholder="20x15x10 cm"
-                  value={dimensions}
-                  onChangeText={setDimensions}
-                />
-              </View>
-            </View>
-
-            <View className="form-group">
-              <Text className="form-label">Payment Information</Text>
-              <View className="flex-row space-x-4">
-                <View className="flex-1">
-                  <TextInput
-                    className="input"
-                    placeholder="Amount (₹)"
-                    value={paymentAmount}
-                    onChangeText={setPaymentAmount}
-                    keyboardType="numeric"
-                  />
-                </View>
-                <View className="flex-1">
-                  <View className="input">
-                    <Text className="text-gray-900">{paymentMethod}</Text>
-                  </View>
-                </View>
-              </View>
-              <Text className="form-help">Payment method is set to Cash by default</Text>
-            </View>
-
-            <View className="form-group">
-              <Text className="form-label">Photos</Text>
-              
-              {photos.length > 0 && (
-                <ScrollView horizontal className="mb-4" showsHorizontalScrollIndicator={false}>
-                  <View className="flex-row space-x-3">
-                    {photos.map((photo, index) => (
-                      <View key={index} className="relative">
-                        <Image source={{ uri: photo }} className="w-24 h-24 rounded-lg shadow-soft" />
-                        <TouchableOpacity
-                          className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1.5 shadow-soft"
-                          onPress={() => removePhoto(index)}
-                        >
-                          <X size={12} color="white" />
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-                  </View>
-                </ScrollView>
-              )}
-
-              <TouchableOpacity
-                className="border-2 border-dashed border-gray-300 rounded-lg p-8 items-center hover:border-blue-400 hover:bg-blue-50 transition-all duration-200"
-                onPress={handleTakePhoto}
-              >
-                <View className="bg-gray-100 rounded-full p-4 mb-3">
-                  <Camera size={32} color="#6b7280" />
-                </View>
-                <Text className="text-gray-700 font-semibold text-base">Take Photo</Text>
-                <Text className="text-gray-500 text-sm mt-1">Add photos of your parcel</Text>
-              </TouchableOpacity>
-            </View>
+      <ScrollView style={s.scroller} showsVerticalScrollIndicator={false}>
+        <View style={s.card}>
+          <View style={s.inputsStack}>
+            <TextInput placeholder="Title" value={title} onChangeText={setTitle} style={s.input} placeholderTextColor="#6b7280" />
+            <TextInput placeholder="Description" value={description} onChangeText={setDescription} style={s.input} placeholderTextColor="#6b7280" />
+            <TextInput placeholder="Sender" value={sender} onChangeText={setSender} style={s.input} placeholderTextColor="#6b7280" />
+            <TextInput placeholder="Recipient" value={recipient} onChangeText={setRecipient} style={s.input} placeholderTextColor="#6b7280" />
+            <TextInput placeholder="Recipient Address" value={recipientAddress} onChangeText={setRecipientAddress} style={s.input} placeholderTextColor="#6b7280" />
+            <TextInput placeholder="Weight (kg)" value={weight} onChangeText={setWeight} style={s.input} placeholderTextColor="#6b7280" />
+            <TextInput placeholder="Dimensions (cm)" value={dimensions} onChangeText={setDimensions} style={s.input} placeholderTextColor="#6b7280" />
+            <TextInput placeholder="Payment Amount" value={paymentAmount} onChangeText={setPaymentAmount} keyboardType="numeric" style={s.input} placeholderTextColor="#6b7280" />
           </View>
+          <Text style={s.sectionLabel}>Payment Method</Text>
+          <View style={s.rowBetween}>
+            <TouchableOpacity onPress={() => setPaymentMethod('Cash')} style={{ marginRight: 16 }}>
+              <Text style={paymentMethod === 'Cash' ? s.choiceActive : s.choice}>{'Cash'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setPaymentMethod('Card')}>
+              <Text style={paymentMethod === 'Card' ? s.choiceActive : s.choice}>{'Card'}</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={s.sectionLabel}>Photos</Text>
+          {photos.length > 0 && (
+            <ScrollView horizontal style={{ marginBottom: 16 }} showsHorizontalScrollIndicator={false}>
+              <View style={{ flexDirection: 'row', columnGap: 12 }}>
+                {photos.map((photo, index) => (
+                  <View key={index} style={{ position: 'relative' }}>
+                    <Image source={{ uri: photo }} style={s.photo} />
+                    <TouchableOpacity style={s.photoDelete} onPress={() => removePhoto(index)}>
+                      <X size={12} color="white" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+          )}
+          <TouchableOpacity style={s.photoCta} onPress={handleTakePhoto}>
+            <View style={s.photoCtaIcon}><Camera size={32} color="#6b7280" /></View>
+            <Text style={s.photoCtaTitle}>Take Photo</Text>
+            <Text style={s.photoCtaSubtitle}>Add photos of your parcel</Text>
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          className={`btn-primary mt-8 mb-8 ${loading ? 'opacity-50' : ''}`}
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          <Text className="text-white font-semibold text-lg">
-            {loading ? 'Creating Parcel...' : 'Create Parcel'}
-          </Text>
+        <TouchableOpacity style={[s.primaryBtn, loading && { opacity: 0.5 }]} onPress={handleSubmit} disabled={loading}>
+          <Text style={s.primaryBtnText}>{loading ? 'Creating Parcel...' : 'Create Parcel'}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+const s = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f9fafb' },
+  header: { paddingHorizontal: 24, paddingVertical: 24, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+  headerTitle: { fontSize: 24, fontWeight: '700', color: '#111827' },
+  headerSubtitle: { marginTop: 4, fontSize: 12, color: '#6b7280' },
+  scroller: { flex: 1, paddingHorizontal: 24, paddingVertical: 24 },
+  card: { backgroundColor: '#ffffff', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#f3f4f6', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
+  inputsStack: { rowGap: 12 },
+  input: { backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, color: '#111827' },
+  sectionLabel: { fontWeight: '600', marginTop: 24, marginBottom: 8, color: '#374151' },
+  rowBetween: { flexDirection: 'row', marginBottom: 16 },
+  choice: { color: '#6b7280', fontWeight: '700' },
+  choiceActive: { color: '#2563eb', fontWeight: '700' },
+  photo: { width: 96, height: 96, borderRadius: 8, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
+  photoDelete: { position: 'absolute', top: -6, right: -6, backgroundColor: '#ef4444', borderRadius: 999, padding: 6 },
+  photoCta: { borderWidth: 2, borderStyle: 'dashed', borderColor: '#d1d5db', borderRadius: 12, padding: 32, alignItems: 'center' },
+  photoCtaIcon: { backgroundColor: '#f3f4f6', borderRadius: 999, padding: 12, marginBottom: 12 },
+  photoCtaTitle: { color: '#374151', fontWeight: '600', fontSize: 16 },
+  photoCtaSubtitle: { color: '#6b7280', fontSize: 12, marginTop: 4 },
+  primaryBtn: { backgroundColor: '#2563eb', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 32, marginBottom: 32 },
+  primaryBtnText: { color: 'white', fontWeight: '600', fontSize: 18 },
+});
