@@ -1,6 +1,8 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { createParcel, generateTrackingNumber } from '@/services/parcelService';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { Camera, X } from 'lucide-react-native';
 import React, { useRef, useState } from 'react';
@@ -20,6 +22,7 @@ export default function AddParcel() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [showCamera, setShowCamera] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   
   const [permission, requestPermission] = useCameraPermissions();
   const { user } = useAuth();
@@ -43,6 +46,7 @@ export default function AddParcel() {
         const photo = await cameraRef.current.takePictureAsync();
         setPhotos([...photos, photo.uri]);
         setShowCamera(false);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       } catch (error) {
         Alert.alert('Error', 'Failed to capture photo');
       }
@@ -54,8 +58,16 @@ export default function AddParcel() {
   };
 
   const handleSubmit = async () => {
-    if (!title || !sender || !recipient || !recipientAddress) {
-      Alert.alert('Error', 'Please fill in all required fields');
+    const newErrors: Record<string, string> = {};
+    if (!title) newErrors.title = 'Title is required';
+    if (!sender) newErrors.sender = 'Sender is required';
+    if (!recipient) newErrors.recipient = 'Recipient is required';
+    if (!recipientAddress) newErrors.recipientAddress = 'Recipient address is required';
+    if (paymentAmount && isNaN(Number(paymentAmount))) newErrors.paymentAmount = 'Amount must be a number';
+
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
@@ -92,6 +104,7 @@ export default function AddParcel() {
         }]
       });
 
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert('Success', `Parcel created with tracking number: ${trackingNumber}`, [
         { text: 'OK', onPress: () => router.push('/(tabs)/track') }
       ]);
@@ -107,10 +120,37 @@ export default function AddParcel() {
       setPaymentAmount('');
       setPaymentMethod('Cash');
       setPhotos([]);
+      setErrors({});
     } catch (error) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Error', 'Failed to create parcel. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePickFromGallery = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'We need access to your photos to pick images.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        quality: 0.6,
+        selectionLimit: 5,
+      });
+      if (!result.canceled) {
+        const selected = result.assets?.map(a => a.uri).filter(Boolean) as string[];
+        if (selected?.length) {
+          setPhotos(prev => [...prev, ...selected]);
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+      }
+    } catch (e) {
+      Alert.alert('Error', 'Could not open gallery');
     }
   };
 
@@ -153,14 +193,43 @@ export default function AddParcel() {
       <ScrollView style={s.scroller} showsVerticalScrollIndicator={false}>
         <View style={s.card}>
           <View style={s.inputsStack}>
-            <TextInput placeholder="Title" value={title} onChangeText={setTitle} style={s.input} placeholderTextColor="#6b7280" />
-            <TextInput placeholder="Description" value={description} onChangeText={setDescription} style={s.input} placeholderTextColor="#6b7280" />
-            <TextInput placeholder="Sender" value={sender} onChangeText={setSender} style={s.input} placeholderTextColor="#6b7280" />
-            <TextInput placeholder="Recipient" value={recipient} onChangeText={setRecipient} style={s.input} placeholderTextColor="#6b7280" />
-            <TextInput placeholder="Recipient Address" value={recipientAddress} onChangeText={setRecipientAddress} style={s.input} placeholderTextColor="#6b7280" />
-            <TextInput placeholder="Weight (kg)" value={weight} onChangeText={setWeight} style={s.input} placeholderTextColor="#6b7280" />
-            <TextInput placeholder="Dimensions (cm)" value={dimensions} onChangeText={setDimensions} style={s.input} placeholderTextColor="#6b7280" />
-            <TextInput placeholder="Payment Amount" value={paymentAmount} onChangeText={setPaymentAmount} keyboardType="numeric" style={s.input} placeholderTextColor="#6b7280" />
+            <View>
+              <Text style={s.label}>Title <Text style={s.req}>*</Text></Text>
+              <TextInput placeholder="Parcel title" value={title} onChangeText={setTitle} style={[s.input, errors.title && s.inputError]} placeholderTextColor="#6b7280" />
+              {errors.title ? <Text style={s.errorText}>{errors.title}</Text> : null}
+            </View>
+            <View>
+              <Text style={s.label}>Description</Text>
+              <TextInput placeholder="Short description" value={description} onChangeText={setDescription} style={s.input} placeholderTextColor="#6b7280" />
+            </View>
+            <View>
+              <Text style={s.label}>Sender <Text style={s.req}>*</Text></Text>
+              <TextInput placeholder="Sender name" value={sender} onChangeText={setSender} style={[s.input, errors.sender && s.inputError]} placeholderTextColor="#6b7280" />
+              {errors.sender ? <Text style={s.errorText}>{errors.sender}</Text> : null}
+            </View>
+            <View>
+              <Text style={s.label}>Recipient <Text style={s.req}>*</Text></Text>
+              <TextInput placeholder="Recipient name" value={recipient} onChangeText={setRecipient} style={[s.input, errors.recipient && s.inputError]} placeholderTextColor="#6b7280" />
+              {errors.recipient ? <Text style={s.errorText}>{errors.recipient}</Text> : null}
+            </View>
+            <View>
+              <Text style={s.label}>Recipient Address <Text style={s.req}>*</Text></Text>
+              <TextInput placeholder="Address" value={recipientAddress} onChangeText={setRecipientAddress} style={[s.input, errors.recipientAddress && s.inputError]} placeholderTextColor="#6b7280" />
+              {errors.recipientAddress ? <Text style={s.errorText}>{errors.recipientAddress}</Text> : null}
+            </View>
+            <View>
+              <Text style={s.label}>Weight (kg)</Text>
+              <TextInput placeholder="e.g., 1.5" value={weight} onChangeText={setWeight} style={s.input} placeholderTextColor="#6b7280" keyboardType="decimal-pad" />
+            </View>
+            <View>
+              <Text style={s.label}>Dimensions (cm)</Text>
+              <TextInput placeholder="L x W x H" value={dimensions} onChangeText={setDimensions} style={s.input} placeholderTextColor="#6b7280" />
+            </View>
+            <View>
+              <Text style={s.label}>Payment Amount</Text>
+              <TextInput placeholder="0" value={paymentAmount} onChangeText={setPaymentAmount} keyboardType="decimal-pad" style={[s.input, errors.paymentAmount && s.inputError]} placeholderTextColor="#6b7280" />
+              {errors.paymentAmount ? <Text style={s.errorText}>{errors.paymentAmount}</Text> : null}
+            </View>
           </View>
           <Text style={s.sectionLabel}>Payment Method</Text>
           <View style={s.rowBetween}>
@@ -186,13 +255,24 @@ export default function AddParcel() {
               </View>
             </ScrollView>
           )}
-          <TouchableOpacity style={s.photoCta} onPress={handleTakePhoto}>
-            <View style={s.photoCtaIcon}><Camera size={32} color="#6b7280" /></View>
-            <Text style={s.photoCtaTitle}>Take Photo</Text>
-            <Text style={s.photoCtaSubtitle}>Add photos of your parcel</Text>
-          </TouchableOpacity>
+          <View style={{ rowGap: 12 }}>
+            <TouchableOpacity style={s.photoCta} onPress={handleTakePhoto}>
+              <View style={s.photoCtaIcon}><Camera size={32} color="#6b7280" /></View>
+              <Text style={s.photoCtaTitle}>Take Photo</Text>
+              <Text style={s.photoCtaSubtitle}>Use camera to add a photo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[s.photoCta, { borderColor: '#c7d2fe', backgroundColor: '#eef2ff' }]} onPress={handlePickFromGallery}>
+              <View style={[s.photoCtaIcon, { backgroundColor: '#e0e7ff' }]}><Camera size={32} color="#6b7280" /></View>
+              <Text style={s.photoCtaTitle}>Pick from Gallery</Text>
+              <Text style={s.photoCtaSubtitle}>Select up to 5 photos</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        <TouchableOpacity style={[s.primaryBtn, loading && { opacity: 0.5 }]} onPress={handleSubmit} disabled={loading}>
+        <TouchableOpacity
+          style={[s.primaryBtn, (loading || !title || !sender || !recipient || !recipientAddress || (paymentAmount && isNaN(Number(paymentAmount)))) && { opacity: 0.5 }]}
+          onPress={handleSubmit}
+          disabled={loading || !title || !sender || !recipient || !recipientAddress || (paymentAmount && isNaN(Number(paymentAmount)))}
+        >
           <Text style={s.primaryBtnText}>{loading ? 'Creating Parcel...' : 'Create Parcel'}</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -209,6 +289,10 @@ const s = StyleSheet.create({
   card: { backgroundColor: '#ffffff', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#f3f4f6', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
   inputsStack: { rowGap: 12 },
   input: { backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, color: '#111827' },
+  inputError: { borderColor: '#ef4444' },
+  label: { color: '#374151', fontWeight: '500', marginBottom: 8 },
+  req: { color: '#ef4444' },
+  errorText: { color: '#ef4444', fontSize: 12, marginTop: 6 },
   sectionLabel: { fontWeight: '600', marginTop: 24, marginBottom: 8, color: '#374151' },
   rowBetween: { flexDirection: 'row', marginBottom: 16 },
   choice: { color: '#6b7280', fontWeight: '700' },
