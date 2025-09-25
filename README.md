@@ -1,60 +1,68 @@
-# Zenexis Tracking (Expo + TypeScript)
+# 📦 Zenexis Tracking
 
-A mobile app for parcel tracking and field logistics built with **Expo**, **React Native**, **TypeScript**, and **Expo Router**.
-
-> 🎥 **Quick demo:** [YouTube Short](https://youtube.com/shorts/5pg4EINtt8A?feature=share)
-
----
-
-## Features
-
-- 🔐 Auth flow with secure token storage
-- 📦 Create & manage parcels (tracking number, receiver, address, notes)
-- 🚪 Reliable logout that clears state and resets navigation
-- 🧭 Expo Router navigation (auth group + app tabs)
-- 🎨 Tailwind/NativeWind styling (utility-first)
+A mobile application for **parcel tracking and field logistics**, built with **Expo**, **React Native**, **TypeScript**, and **Expo Router**.  
+Designed to simplify parcel creation, management, and real-time logistics workflows.
 
 ---
 
-## Tech Stack
+## 🚀 Quick Access
 
-- **App:** Expo (React Native), TypeScript, Expo Router  
-- **State:** React Context + Hooks  
-- **Styling:** Tailwind/NativeWind  
-- **API Layer:** Fetch wrapper with typed services  
+- 🎥 **Demo Video:** [Watch on YouTube](https://youtube.com/shorts/5pg4EINtt8A?feature=share)  
+- 📱 **Download APK (Android):** [Zenexis Tracking v1.0.0](https://expo.dev/artifacts/eas/5HTvfXrTDv8CKvD3QgyAHh.apk)
+
+---
+
+## ✨ Features
+
+- 🔐 **Authentication** – Secure login with token storage  
+- 📦 **Parcel Management** – Create and manage tracking numbers, receivers, and addresses  
+- 🧭 **Navigation** – Expo Router with auth group and tab layout  
+- 🚪 **Logout Handling** – Clears tokens and resets navigation reliably  
+- 🎨 **UI Styling** – TailwindCSS / NativeWind for utility-first design  
+
+---
+
+## 🛠 Tech Stack
+
+- **Framework:** Expo (React Native) + TypeScript  
+- **Navigation:** Expo Router  
+- **State Management:** React Context + Hooks  
+- **Styling:** TailwindCSS with NativeWind  
+- **API Layer:** Custom fetch wrapper with typed services  
 - **Secure Storage:** `expo-secure-store`
 
 ---
 
-## Prerequisites
+## 📋 Prerequisites
 
-- Node.js ≥ 18
-- Git
-- Android Studio (for Android emulator) and/or Xcode (for iOS Simulator on macOS)
-- Expo account (optional but recommended for EAS builds)
+Before running the app, ensure you have:
+
+- Node.js ≥ 18  
+- Git  
+- Android Studio (for emulator) and/or Xcode (for iOS simulator on macOS)  
+- Expo account *(optional but recommended for EAS builds)*  
 
 ---
 
-## 1) Clone & Install
+## ⚙️ Installation & Setup
+
+### 1) Clone & Install
 
 ```bash
-# Clone
+# Clone repository
 git clone https://github.com/Chathura0607/Zenexis_Tracking.git
 cd Zenexis_Tracking
 
-# Install deps
+# Install dependencies
 npm install
-# or: pnpm install / yarn
+# or: pnpm install / yarn install
 ```
 
----
+### 2) Configure Environment
 
-## 2) Configure Environment
+The app requires an API base URL for parcel endpoints.
 
-The app expects an API base URL for parcel endpoints.
-
-### Option A: `app.json` (simple)
-Edit `app.json`:
+#### Option A: Simple (`app.json`)
 
 ```json
 {
@@ -68,8 +76,7 @@ Edit `app.json`:
 }
 ```
 
-### Option B: `app.config.ts` (dynamic)
-Create `app.config.ts` to read from environment variables:
+#### Option B: Dynamic (`app.config.ts` + `.env`)
 
 ```ts
 import 'dotenv/config';
@@ -85,7 +92,7 @@ export default {
 };
 ```
 
-Then create a `.env`:
+Create a `.env` file:
 
 ```env
 API_BASE=https://api.yourdomain.com
@@ -93,61 +100,39 @@ API_BASE=https://api.yourdomain.com
 
 ---
 
-## 3) Run the App
+## ▶️ Running the App
 
 ```bash
-# Start the dev server
+# Start development server
 npx expo start
 ```
 
-Open it in:
+Open the app in:
 
-- **Expo Go** (scan QR code)  
-- **Android emulator** (press `a`)  
-- **iOS Simulator** (press `i` on macOS)
-
----
-
-## 4) Common Scripts
-
-```bash
-# Dev server
-npm run start
-
-# Typecheck
-npm run typecheck
-
-# Lint (fix)
-npm run lint -- --fix
-
-# Clear Metro/Expo cache if stuck
-npx expo start -c
-```
+- 📱 **Expo Go** (scan QR code)  
+- 🤖 **Android Emulator** (`a` in terminal)  
+- 🍏 **iOS Simulator** (`i` in terminal, macOS only)  
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
 ```
 .
-├─ app/                     # Expo Router screens
-│  ├─ (auth)/               # Login/Signup screens
+├─ app/                     # Screens (Expo Router)
+│  ├─ (auth)/               # Auth flow (Login/Signup)
 │  └─ (tabs)/               # App tabs
 │     └─ parcels/
 │        └─ add.tsx         # Add Parcel screen
-├─ components/              # Reusable UI
-├─ contexts/
-│  └─ AuthContext.tsx       # Auth provider (token, login, logout)
-├─ hooks/
-├─ services/
-│  ├─ http.ts               # Fetch wrapper (API_BASE, errors)
-│  └─ parcels.ts            # Parcel service (create, list)
-├─ types/
-├─ assets/
-│  └─ images/
-├─ navigation/
-│  └─ navigationRef.ts      # Imperative nav reset helper
-├─ app.json | app.config.ts # Expo configuration + extra.API_BASE
+├─ components/              # Shared UI components
+├─ contexts/                # React Context providers
+│  └─ AuthContext.tsx
+├─ hooks/                   # Custom hooks
+├─ services/                # API services (fetch wrapper, parcels)
+├─ types/                   # TypeScript types
+├─ assets/                  # Images & assets
+├─ navigation/              # Navigation helpers
+├─ app.json | app.config.ts # Expo config
 ├─ tailwind.config.js
 ├─ tsconfig.json
 └─ eslint.config.js
@@ -155,27 +140,34 @@ npx expo start -c
 
 ---
 
-## Using the App
+## 📱 Using the App
 
-### Authentication
-- Log in to obtain a token (stored via `expo-secure-store`).
-- The navigation swaps from `(auth)` to `(tabs)` automatically.
+### 🔑 Authentication
+- Log in → token stored securely via `expo-secure-store`.  
+- Navigation automatically switches from `(auth)` → `(tabs)`.
 
-### Add a Parcel
-- Go to **Parcels → Add**.
-- Provide **Tracking Number**, **Receiver Name**, **Address** (required), plus optional notes.
-- Press **Add Parcel** to submit.
+### ➕ Adding a Parcel
+1. Navigate to **Parcels → Add**.  
+2. Fill in:
+   - Tracking Number  
+   - Receiver Name  
+   - Address *(required)*  
+   - Notes *(optional)*  
+3. Submit to create the parcel.
 
-### Logout
-- From **Settings**, tap **Log out**.
-- Tokens are deleted; navigation resets to the auth stack.
+### 🚪 Logout
+- Available from **Settings → Log out**.  
+- Tokens cleared, navigation resets to login flow.
 
 ---
 
-## API Contract
+## 📡 API Contract
 
-`POST /parcels`  
-**Body:**
+### Create Parcel
+
+`POST /parcels`
+
+**Request:**
 ```json
 {
   "trackingNumber": "ZX-123456",
@@ -185,6 +177,7 @@ npx expo start -c
   "weightKg": 1.25
 }
 ```
+
 **Response:**
 ```json
 {
@@ -200,23 +193,53 @@ npx expo start -c
 
 ---
 
-## Troubleshooting
+## 🧑‍💻 Development Scripts
 
-- Run `npx expo start -c` if stuck on caching.  
-- For “Network request failed”, ensure `API_BASE` is reachable.  
-- Prefer HTTPS APIs.  
+```bash
+# Start dev server
+npm run start
+
+# Type checking
+npm run typecheck
+
+# Lint with auto-fix
+npm run lint -- --fix
+
+# Reset cache if stuck
+npx expo start -c
+```
 
 ---
 
-## Building (EAS)
+## 🏗️ Building with EAS
 
 ```bash
+# Login to Expo
 eas login
+
+# Configure
 eas build:configure
 
-# Build
+# Build Android
 eas build -p android
+
+# Build iOS
 eas build -p ios
 ```
+
+---
+
+## 🐞 Troubleshooting
+
+- ❌ **Stuck on caching** → `npx expo start -c`  
+- 🌐 **Network request failed** → Ensure `API_BASE` is correct and reachable  
+- 🔒 Always prefer HTTPS for API endpoints  
+
+---
+
+## 📬 Contact
+
+Maintained by **[Chathura Lakmina](https://github.com/Chathura0607)**.  
+For issues, open a [GitHub Issue](https://github.com/Chathura0607/Zenexis_Tracking/issues).
 
 ---
