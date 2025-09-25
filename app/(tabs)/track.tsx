@@ -1,9 +1,9 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { getUserParcels } from '@/services/parcelService';
+import { getUserParcels, updateParcelStatus } from '@/services/parcelService';
 import { Parcel } from '@/types/parcel';
 import { CircleCheck as CheckCircle, Clock, MapPin, Package, Search, Truck, Circle as XCircle } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Image, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const StatusIcon = ({ status }: { status: string }) => {
@@ -38,6 +38,11 @@ export default function Track() {
   const [parcels, setParcels] = useState<Parcel[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [selectedParcel, setSelectedParcel] = useState<Parcel | null>(null);
+  const [newStatus, setNewStatus] = useState<'pending' | 'in-transit' | 'delivered' | 'cancelled'>('pending');
+  const [location, setLocation] = useState('');
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     loadParcels();
@@ -53,6 +58,29 @@ export default function Track() {
       Alert.alert('Error', 'Failed to load parcels');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openUpdate = (parcel: Parcel) => {
+    setSelectedParcel(parcel);
+    setNewStatus(parcel.status);
+    setLocation('');
+    setShowUpdateModal(true);
+  };
+
+  const submitUpdate = async () => {
+    if (!selectedParcel) return;
+    setUpdating(true);
+    try {
+      const loc = location || 'Status updated';
+      await updateParcelStatus(selectedParcel.id, newStatus, loc);
+      setShowUpdateModal(false);
+      setSelectedParcel(null);
+      await loadParcels();
+    } catch (e) {
+      Alert.alert('Error', 'Failed to update status');
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -87,7 +115,10 @@ export default function Track() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.listContainer}>
+      <ScrollView
+        contentContainerStyle={styles.listContainer}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={loadParcels} />}
+      >
         {loading ? (
           <View style={styles.centered}>
             <Text style={styles.mutedText}>Loading parcels...</Text>
@@ -120,6 +151,9 @@ export default function Track() {
                 </View>
 
                 <View style={styles.cardBody}>
+                  {parcel.photos && parcel.photos[0] ? (
+                    <Image source={{ uri: parcel.photos[0] }} style={styles.thumb} />
+                  ) : null}
                   <View style={styles.inlineRow}>
                     <MapPin size={16} color="#6b7280" />
                     <Text style={styles.inlineText}>{parcel.recipientAddress}</Text>
@@ -144,11 +178,75 @@ export default function Track() {
                     </View>
                   </View>
                 )}
+
+                <View style={{ marginTop: 12 }}>
+                  <TouchableOpacity style={styles.updateBtn} onPress={() => openUpdate(parcel)}>
+                    <Text style={styles.updateBtnText}>Update Status</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             ))}
           </View>
         )}
       </ScrollView>
+
+      <Modal transparent visible={showUpdateModal} animationType="fade" onRequestClose={() => setShowUpdateModal(false)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setShowUpdateModal(false)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Update Status</Text>
+            {selectedParcel && (
+              <Text style={styles.modalSubtitle}>{selectedParcel.title} • {selectedParcel.trackingNumber}</Text>
+            )}
+
+            <View style={{ marginTop: 16 }}>
+              <Text style={styles.modalLabel}>Select status</Text>
+              <View style={styles.statusRow}>
+                {(['pending','in-transit','delivered'] as const).map(s => (
+                  <TouchableOpacity
+                    key={s}
+                    style={[styles.statusChip, newStatus === s && styles.statusChipActive]}
+                    onPress={() => setNewStatus(s)}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ marginRight: 6 }}>
+                        <StatusIcon status={s} />
+                      </View>
+                      <Text style={[styles.statusChipText, newStatus === s && styles.statusChipTextActive]}>{s}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              {selectedParcel && (
+                <Text style={styles.modalHint}>Current: <Text style={{ textTransform: 'capitalize' }}>{selectedParcel.status}</Text></Text>
+              )}
+            </View>
+
+            <View style={{ marginTop: 12 }}>
+              <Text style={styles.modalLabel}>Location/Note</Text>
+              <TextInput
+                placeholder="e.g., Arrived at sorting facility"
+                value={location}
+                onChangeText={setLocation}
+                style={styles.modalInput}
+                placeholderTextColor="#6b7280"
+              />
+            </View>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnSecondary]} onPress={() => setShowUpdateModal(false)}>
+                <Text style={styles.modalBtnSecondaryText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnPrimary, (updating || (selectedParcel && newStatus === selectedParcel.status)) && { opacity: 0.6 }]}
+                onPress={submitUpdate}
+                disabled={updating || (selectedParcel ? newStatus === selectedParcel.status : false)}
+              >
+                <Text style={styles.modalBtnPrimaryText}>{updating ? 'Updating...' : 'Save'}</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -202,6 +300,27 @@ const styles = StyleSheet.create({
   footerHeading: { fontSize: 12, fontWeight: '600', color: '#111827', marginBottom: 8 },
   inlineTitle: { fontSize: 14, color: '#111827', textTransform: 'capitalize' },
   inlineSubtle: { fontSize: 12, color: '#6b7280' },
+  updateBtn: { backgroundColor: '#111827', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  updateBtnText: { color: 'white', fontWeight: '600' },
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 24 },
+  modalCard: { backgroundColor: 'white', borderRadius: 12, padding: 16 },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
+  modalSubtitle: { color: '#6b7280', marginTop: 4 },
+  modalLabel: { color: '#374151', fontWeight: '500', marginBottom: 8 },
+  modalHint: { color: '#6b7280', marginTop: 8 },
+  statusRow: { flexDirection: 'row', columnGap: 8 },
+  statusChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: '#f3f4f6' },
+  statusChipActive: { backgroundColor: '#dbeafe' },
+  statusChipText: { color: '#374151', fontWeight: '500', textTransform: 'capitalize' },
+  statusChipTextActive: { color: '#1d4ed8' },
+  modalInput: { backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: '#111827' },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', columnGap: 12, marginTop: 16 },
+  modalBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10 },
+  modalBtnSecondary: { backgroundColor: '#f3f4f6' },
+  modalBtnPrimary: { backgroundColor: '#2563eb' },
+  modalBtnSecondaryText: { color: '#111827', fontWeight: '600' },
+  modalBtnPrimaryText: { color: 'white', fontWeight: '600' },
+  thumb: { width: '100%', height: 160, borderRadius: 10, marginBottom: 8, backgroundColor: '#f3f4f6' },
 });
 
 function getStatusPillStyle(status: string) {
