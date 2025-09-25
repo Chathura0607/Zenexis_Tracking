@@ -1,4 +1,5 @@
 import { auth, db } from '@/config/firebase';
+import { securityService } from '@/services/securityService';
 import { router } from 'expo-router';
 import { User, createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -28,7 +29,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Log successful login attempt (non-blocking)
+      try {
+        await securityService.logLoginAttempt(
+          userCredential.user.uid,
+          true,
+          undefined,
+          'unknown', // IP address not available in mobile app
+          'mobile-app'
+        );
+      } catch (logError) {
+        console.warn('Failed to log login attempt:', logError);
+        // Don't throw error for logging failures
+      }
+    } catch (error) {
+      // Log failed login attempt (non-blocking)
+      try {
+        await securityService.logLoginAttempt(
+          'anonymous',
+          false,
+          error instanceof Error ? error.message : 'Unknown error',
+          'unknown',
+          'mobile-app'
+        );
+      } catch (logError) {
+        console.warn('Failed to log failed login attempt:', logError);
+        // Don't throw error for logging failures
+      }
+      throw error;
+    }
   };
 
   const signup = async (email: string, password: string, name: string) => {

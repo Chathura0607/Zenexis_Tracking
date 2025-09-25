@@ -271,7 +271,7 @@ export default function AddParcel() {
         <TouchableOpacity
           style={[s.primaryBtn, (loading || !title || !sender || !recipient || !recipientAddress || (paymentAmount && isNaN(Number(paymentAmount)))) && { opacity: 0.5 }]}
           onPress={handleSubmit}
-          disabled={loading || !title || !sender || !recipient || !recipientAddress || (paymentAmount && isNaN(Number(paymentAmount)))}
+          disabled={Boolean(loading || !title || !sender || !recipient || !recipientAddress || (paymentAmount && isNaN(Number(paymentAmount))))}
         >
           <Text style={s.primaryBtnText}>{loading ? 'Creating Parcel...' : 'Create Parcel'}</Text>
         </TouchableOpacity>

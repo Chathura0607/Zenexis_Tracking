@@ -1,7 +1,9 @@
 // src/config/firebase.ts
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getApp, getApps, initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, getReactNativePersistence, initializeAuth } from 'firebase/auth';
 import { getFirestore, initializeFirestore, type Firestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBdeqmDxbGFq1fDgyUhRc5Xim4ZNF0j-oA",
@@ -15,7 +17,18 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-export const auth = getAuth(app);
+// Initialize auth with AsyncStorage persistence
+let auth;
+try {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage)
+  });
+} catch (error) {
+  // If already initialized, get the existing instance
+  auth = getAuth(app);
+}
+
+export { auth };
 
 let firestoreInstance: Firestore;
 
@@ -28,6 +41,7 @@ try {
 }
 
 export const db = firestoreInstance;
+export const storage = getStorage(app);
 
 // Add connection settings to help with WebSocket issues
 if (typeof window !== 'undefined') {

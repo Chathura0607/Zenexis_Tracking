@@ -1,8 +1,10 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { getUserParcels } from '@/services/parcelService';
-import { Bell, LogOut, Settings, Shield, User } from 'lucide-react-native';
+import { profileService, UserProfile } from '@/services/profileService';
+import { router } from 'expo-router';
+import { Bell, Edit3, LogOut, Settings, Shield, User } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Import or define the Parcel type
@@ -10,21 +12,26 @@ import type { Parcel } from '@/services/parcelService';
 
 export default function Profile() {
   const [parcels, setParcels] = useState<Parcel[]>([]);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const { user, logout } = useAuth();
 
   useEffect(() => {
-    loadParcels();
+    loadData();
   }, [user]);
 
-  const loadParcels = async () => {
+  const loadData = async () => {
     if (!user) return;
     
     try {
-      const userParcels = await getUserParcels(user.uid);
+      const [userParcels, userProfile] = await Promise.all([
+        getUserParcels(user.uid),
+        profileService.getUserProfile(user.uid)
+      ]);
       setParcels(userParcels);
+      setProfile(userProfile);
     } catch (error) {
-      console.error('Failed to load parcels:', error);
+      console.error('Failed to load data:', error);
     } finally {
       setLoading(false);
     }
@@ -61,8 +68,8 @@ export default function Profile() {
 
   const menuItems = [
     { icon: Bell, title: 'Notifications', subtitle: 'Manage notification preferences' },
-    { icon: Shield, title: 'Privacy & Security', subtitle: 'Account security settings' },
-    { icon: Settings, title: 'App Settings', subtitle: 'Customize your experience' },
+    { icon: Shield, title: 'Security Settings', subtitle: 'Login history, 2FA, security alerts' },
+    { icon: Settings, title: 'Profile Settings', subtitle: 'Edit profile, change password, delete account' },
   ];
 
   return (
@@ -70,8 +77,14 @@ export default function Profile() {
       <ScrollView style={{ flex: 1 }}>
         <View style={p.headerWrap}>
           <View style={p.centerItems}>
-            <View style={p.avatar}><User size={32} color="white" /></View>
-            <Text style={p.title}>{user?.email}</Text>
+            <View style={p.avatar}>
+              {profile?.profilePicture ? (
+                <Image source={{ uri: profile.profilePicture }} style={p.avatarImage} />
+              ) : (
+                <User size={32} color="white" />
+              )}
+            </View>
+            <Text style={p.title}>{profile?.name || user?.email}</Text>
             <Text style={p.subtle}>Member since {new Date().getFullYear()}</Text>
           </View>
 
@@ -102,13 +115,22 @@ export default function Profile() {
               <TouchableOpacity
                 key={index}
                 style={[p.menuRow, index !== menuItems.length - 1 && p.menuRowDivider]}
-                onPress={() => Alert.alert('Coming Soon', 'This feature will be available soon!')}
+                onPress={() => {
+                  if (item.title === 'Profile Settings') {
+                    router.push('/(tabs)/profile/profile-settings');
+                  } else if (item.title === 'Security Settings') {
+                    router.push('/(tabs)/profile/security-settings');
+                  } else {
+                    Alert.alert('Coming Soon', 'This feature will be available soon!');
+                  }
+                }}
               >
                 <View style={p.menuIcon}><item.icon size={20} color="#6b7280" /></View>
                 <View style={{ flex: 1 }}>
                   <Text style={p.menuTitle}>{item.title}</Text>
                   <Text style={p.menuSubtitle}>{item.subtitle}</Text>
                 </View>
+                {(item.title === 'Profile Settings' || item.title === 'Security Settings') && <Edit3 size={16} color="#3b82f6" />}
               </TouchableOpacity>
             ))}
           </View>
@@ -134,7 +156,8 @@ const p = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb' },
   headerWrap: { backgroundColor: '#ffffff', paddingHorizontal: 24, paddingVertical: 24 },
   centerItems: { alignItems: 'center' },
-  avatar: { backgroundColor: '#3b82f6', borderRadius: 999, padding: 16, marginBottom: 16 },
+  avatar: { backgroundColor: '#3b82f6', borderRadius: 999, padding: 16, marginBottom: 16, width: 80, height: 80, justifyContent: 'center', alignItems: 'center' },
+  avatarImage: { width: 80, height: 80, borderRadius: 40 },
   title: { fontSize: 24, fontWeight: '700', color: '#111827' },
   subtle: { color: '#6b7280', marginTop: 4 },
   statsRow: { flexDirection: 'row', justifyContent: 'space-around', backgroundColor: '#f3f4f6', borderRadius: 12, padding: 16, marginTop: 16 },
